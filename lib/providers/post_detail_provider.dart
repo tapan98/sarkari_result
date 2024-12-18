@@ -91,11 +91,13 @@ final postsProvider = Provider((ref) {
   return _allPosts;
 });
 
-final availablePostsProvider = Provider((ref) async {
+final availablePostsByDateProvider = Provider((ref) async {
   return await Future<List<Post>>(() {
     List<Post> posts = [
       for (Post post in _allPosts)
-        if (post.lastDate != null && post.lastDate!.isAfter(_today))
+        // posts that are either after [_today] or equals to [_today.day]
+        if (post.lastDate != null &&
+            (post.lastDate!.isAfter(_today) || _isToday(post.lastDate!)))
           Post(title: post.title, lastDate: post.lastDate, uri: post.uri)
     ];
     posts.sort((a, b) => (a.lastDate!.difference(_today))
@@ -124,5 +126,11 @@ final noDatePostsProvider = Provider((ref) async {
     ];
   });
 });
+
+bool _isToday(DateTime date) {
+  return (date.day == _today.day &&
+      date.month == _today.month &&
+      date.year == _today.year);
+}
 
 DateTime _today = kDebugMode ? DateTime.parse("2024-11-30") : DateTime.now();

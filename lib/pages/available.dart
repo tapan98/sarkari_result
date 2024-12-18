@@ -8,7 +8,7 @@ class AvailablePostPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final availablePosts = ref.watch(availablePostsProvider);
+    final availablePosts = ref.watch(availablePostsByDateProvider);
 
     return FutureBuilder(
         future: availablePosts,
