@@ -7,19 +7,24 @@ import 'package:sarkari_result/models/post.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as dom;
+import 'package:sarkari_result/shared/data/date.dart';
 
-class PostDetailNotifier extends AsyncNotifier<Future<List<Post>>> {
+class PostListNotifier extends AsyncNotifier<Future<List<Post>>> {
   @override
   Future<List<Post>> build() async {
-    return await _fetchJobs();
-  }
-
-  Future<List<Post>> _fetchJobs() async {
     http.Response response = await _response();
 
-    if (kDebugMode) print("Today: $_today");
-
     return _parseJobs(response.body);
+  }
+
+  void refresh() async {
+    http.Response response = await _response();
+
+    if (kDebugMode) print("Today: $today");
+
+    state = AsyncValue.data(Future(() {
+      return _parseJobs(response.body);
+    }));
   }
 
   Future<http.Response> _response() async {
@@ -81,56 +86,13 @@ class PostDetailNotifier extends AsyncNotifier<Future<List<Post>>> {
 }
 
 final postDetailNotifierProvider =
-    AsyncNotifierProvider<PostDetailNotifier, Future<List<Post>>>(() {
-  return PostDetailNotifier();
+    AsyncNotifierProvider<PostListNotifier, Future<List<Post>>>(() {
+  return PostListNotifier();
 });
 
+/// updated by [PostListNotifier]
 List<Post> _allPosts = [];
 
 final postsProvider = Provider((ref) {
   return _allPosts;
 });
-
-final availablePostsByDateProvider = Provider((ref) async {
-  return await Future<List<Post>>(() {
-    List<Post> posts = [
-      for (Post post in _allPosts)
-        // posts that are either after [_today] or equals to [_today.day]
-        if (post.lastDate != null &&
-            (post.lastDate!.isAfter(_today) || _isToday(post.lastDate!)))
-          Post(title: post.title, lastDate: post.lastDate, uri: post.uri)
-    ];
-    posts.sort((a, b) => (a.lastDate!.difference(_today))
-        .inDays
-        .compareTo((b.lastDate!.difference(_today)).inDays));
-    return posts;
-  });
-});
-
-final notAvailablePostsProvider = Provider((ref) async {
-  return await Future<List<Post>>(() {
-    return [
-      for (Post post in _allPosts)
-        if (post.lastDate != null && !post.lastDate!.isAfter(_today))
-          Post(title: post.title, lastDate: post.lastDate, uri: post.uri)
-    ];
-  });
-});
-
-final noDatePostsProvider = Provider((ref) async {
-  return await Future<List<Post>>(() {
-    return [
-      for (Post post in _allPosts)
-        if (post.lastDate == null)
-          Post(title: post.title, lastDate: post.lastDate, uri: post.uri)
-    ];
-  });
-});
-
-bool _isToday(DateTime date) {
-  return (date.day == _today.day &&
-      date.month == _today.month &&
-      date.year == _today.year);
-}
-
-DateTime _today = kDebugMode ? DateTime.parse("2024-11-30") : DateTime.now();

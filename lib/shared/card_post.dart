@@ -36,19 +36,15 @@ class CardPost extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSecondaryContainer),
+                style: const TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (date != null)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Last Date: $date",
-                    style: TextStyle(
-                        color: theme.colorScheme.onSecondaryContainer),
-                  ),
+                  child: Text("Last Date: $date"),
                 ),
             ],
           ),

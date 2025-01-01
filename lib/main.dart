@@ -1,7 +1,7 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sarkari_result/pages/home.dart';
+import 'package:sarkari_result/pages/home_page.dart';
 
 void main() async {
   runApp(const ProviderScope(child: MainApp()));

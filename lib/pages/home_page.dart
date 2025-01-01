@@ -4,10 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sarkari_result/exceptions/post_parse.dart';
-import 'package:sarkari_result/pages/available.dart';
-import 'package:sarkari_result/pages/not_available.dart';
-import 'package:sarkari_result/pages/other_posts.dart';
-import 'package:sarkari_result/providers/post_detail_provider.dart';
+import 'package:sarkari_result/models/post.dart';
+import 'package:sarkari_result/pages/available_posts_page.dart';
+import 'package:sarkari_result/pages/outdated_posts_page.dart';
+import 'package:sarkari_result/pages/undetermined_posts_page.dart';
+import 'package:sarkari_result/providers/all_posts_provider.dart';
 import 'package:sarkari_result/shared/navigation_item.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -18,14 +19,15 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  AsyncValue<Future<List<Post>>>? jobs;
   @override
   Widget build(BuildContext context) {
-    final job = ref.watch(postDetailNotifierProvider);
+    jobs = ref.watch(postDetailNotifierProvider);
     return Scaffold(
       appBar: _appBar(),
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: FutureBuilder(
-        future: job.value,
+        future: jobs?.value,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData &&
@@ -42,21 +44,47 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               );
             } else if (snapshot.error.runtimeType == SocketException) {
-              return Center(
-                child: Text("Unable to connect\n${snapshot.error}"),
-              );
+              return _unableToConnect(snapshot.error);
             }
             return Center(
               child: Text("Error!\n${snapshot.error}"),
             );
           }
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+
+          return _fetchingData();
         },
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
+  }
+
+  Widget _unableToConnect(Object? error) {
+    return LayoutBuilder(
+      builder: (context, constraints) => RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          children: [
+            Container(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: Text("Unable to connect\n$error"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _refresh() async {
+    return Future.delayed(const Duration(seconds: 0), () {
+      try {
+        ref.read(postDetailNotifierProvider.notifier).refresh();
+        setState(() {});
+      } catch (e) {
+        if (kDebugMode) print("[ERROR] _refresh(): $e");
+      }
+    });
   }
 
   Widget _buildDisplay(BuildContext context) {
@@ -82,10 +110,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   bool _isLandScape(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final height = MediaQuery.sizeOf(context).height;
-    if (kDebugMode) print("width/height: ${width / height}");
-
-    return (width / height) > 0.7;
+    if (kDebugMode) print("width: $width");
+    return width > 600;
   }
 
   NavigationRail _buildNavigationRail() {
@@ -128,6 +154,24 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  Widget _fetchingData() {
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Center(
+          child: CircularProgressIndicator(),
+        ),
+        SizedBox(
+          height: 10.0,
+        ),
+        Center(
+          child: Text("Fetching jobs list..."),
+        )
+      ],
+    );
+  }
+
   int _activePage = 0;
 
   final List<NavigationItem> _navigationDestinations = [
@@ -137,11 +181,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         destination: const AvailablePostPage()),
     NavigationItem(
         label: "Undetermined",
-        icon: const Icon(Icons.question_mark),
-        destination: const OtherPostsPage()),
+        icon: const Icon(Icons.calendar_today),
+        destination: const UndeterminedPostsPage()),
     NavigationItem(
         label: "Outdated",
         icon: const Icon(Icons.event_busy),
-        destination: const NotAvailablePostPage()),
+        destination: const OutdatedPostPage()),
   ];
 }
