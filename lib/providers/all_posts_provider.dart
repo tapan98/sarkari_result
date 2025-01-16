@@ -17,7 +17,7 @@ class PostListNotifier extends AsyncNotifier<Future<List<Post>>> {
     return _parseJobs(response.body);
   }
 
-  void refresh() async {
+  Future<void> refresh() async {
     http.Response response = await _response();
 
     if (kDebugMode) print("Today: $today");

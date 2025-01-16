@@ -77,9 +77,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _refresh() async {
-    return Future.delayed(const Duration(seconds: 0), () {
+    return Future.delayed(const Duration(), () async {
       try {
-        ref.read(postDetailNotifierProvider.notifier).refresh();
+        await ref.read(postDetailNotifierProvider.notifier).refresh();
         setState(() {});
       } catch (e) {
         if (kDebugMode) print("[ERROR] _refresh(): $e");
