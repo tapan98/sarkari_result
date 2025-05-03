@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sarkari_result/models/post.dart';
@@ -40,7 +39,6 @@ class _PostsGridViewState extends ConsumerState<PostsGridView> {
     // return _buildPostsList(context);
     Future<List<Post>>? postsRef = _selectPosts();
 
-    debugPrint("build(): postRef $postsRef");
     return FutureBuilder(
       future: postsRef,
       builder: (context, snapshot) {
@@ -61,7 +59,6 @@ class _PostsGridViewState extends ConsumerState<PostsGridView> {
   }
 
   Future<List<Post>>? _selectPosts() {
-    debugPrint("_selectPosts(): postSection ${widget.postSection}");
     switch (widget.postSection) {
       case PostFilter.available:
         return ref.watch(availablePostsNotifierProvider);
@@ -131,8 +128,6 @@ class _PostsGridViewState extends ConsumerState<PostsGridView> {
   }
 
   int _getGridCount(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    if (kDebugMode) print("WxH: ${screenSize.width}x${screenSize.height}");
     const int maxSize = 300;
     int gridCount = (MediaQuery.sizeOf(context).width / maxSize).toInt();
     return gridCount < 1 ? 1 : gridCount;
@@ -167,14 +162,7 @@ class _PostsGridViewState extends ConsumerState<PostsGridView> {
   }
 
   String _selectedSortBy() {
-    String sortBy = "Sort By:";
-    switch (_popupSelected) {
-      case PostSort.byNew:
-        sortBy = ("$sortBy New");
-      case PostSort.byDate:
-        sortBy = ("$sortBy Date");
-    }
-    return sortBy;
+    return "Sort by: ${_popupSelected.title}";
   }
 
   Widget _displayError(Object? error) {
@@ -218,14 +206,8 @@ class _PostsGridViewState extends ConsumerState<PostsGridView> {
 
   PostSort _popupSelected = PostSort.byNew;
 
-  final List<PopupMenuItem> _sortByList = const [
-    PopupMenuItem(value: PostSort.byDate, child: Text("Sort by Date")),
-    PopupMenuItem(value: PostSort.byNew, child: Text("Sort by New")),
+  final List<PopupMenuItem> _sortByList = [
+    PopupMenuItem(value: PostSort.byDate, child: Text(PostSort.byDate.title)),
+    PopupMenuItem(value: PostSort.byNew, child: Text(PostSort.byNew.title)),
   ];
-
-  void debugPrint(String msg) {
-    if (kDebugMode) {
-      print("[PostGridView] $msg");
-    }
-  }
 }

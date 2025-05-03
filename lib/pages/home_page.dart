@@ -10,6 +10,7 @@ import 'package:sarkari_result/pages/outdated_posts_page.dart';
 import 'package:sarkari_result/pages/undetermined_posts_page.dart';
 import 'package:sarkari_result/providers/all_posts_provider.dart';
 import 'package:sarkari_result/shared/navigation_item.dart';
+import 'package:sarkari_result/utils/logger.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -45,6 +46,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               );
             } else if (snapshot.error.runtimeType == SocketException) {
               return _unableToConnect(snapshot.error);
+            }
+            if (snapshot.error != null) {
+              Log.error(snapshot.stackTrace);
             }
             return Center(
               child: Text("Error!\n${snapshot.error}"),
@@ -110,7 +114,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   bool _isLandScape(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    if (kDebugMode) print("width: $width");
     return width > 600;
   }
 
